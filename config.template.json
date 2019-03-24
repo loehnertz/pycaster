@@ -1,9 +1,12 @@
 {
   "hosting": {
     "accessKey": "",
+    "endpointUrl": "",
+    "episodePath": "",
+    "feedPath": "",
     "regionName": "",
-    "secretKey": "",
-    "spaceName": ""
+    "secret": "",
+    "bucketName": ""
   },
   "podcast": {
     "authors": [
