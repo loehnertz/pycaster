@@ -1,15 +1,23 @@
 {
-  "authors": [
-    {
-      "email": "",
-      "name": "",
-      "uri": ""
-    }
-  ],
-  "category": "",
-  "description": "",
-  "language": "",
-  "logoUri": "",
-  "name": "",
-  "website": ""
+  "hosting": {
+    "accessKey": "",
+    "regionName": "",
+    "secretKey": "",
+    "spaceName": ""
+  },
+  "podcast": {
+    "authors": [
+      {
+        "email": "",
+        "name": "",
+        "uri": ""
+      }
+    ],
+    "category": "",
+    "description": "",
+    "language": "",
+    "logoUri": "",
+    "name": "",
+    "website": ""
+  }
 }

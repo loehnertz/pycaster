@@ -13,6 +13,8 @@ class Pycaster:
     MP3_TYPE_KEY = 'audio/mpeg'
 
     # Configuration keys
+    HOSTING_KEY = 'hosting'
+    PODCAST_KEY = 'podcast'
     AUTHORS_KEY = 'authors'
     AUTHORS_EMAIL_KEY = 'email'
     AUTHORS_NAME_KEY = 'name'
@@ -73,15 +75,15 @@ class Pycaster:
             exit()
 
     def _load_authors(self):
-        authors = self.config.get(self.AUTHORS_KEY)
+        authors = self.config.get(self.PODCAST_KEY, {}).get(self.AUTHORS_KEY)
 
         if not authors:
-            raise self.build_missing_configuration_exception(self.AUTHORS_KEY)
+            raise self.build_missing_config_exception(self.AUTHORS_KEY)
 
         authors_keys = list(chain(*[list(author.keys()) if isinstance(author, dict) else None for author in authors]))
 
         if not all(authors_keys):
-            raise self.build_missing_configuration_exception(f"{self.AUTHORS_KEY}.{self.AUTHORS_NAME_KEY}")
+            raise self.build_missing_config_exception(f"{self.AUTHORS_KEY}.{self.AUTHORS_NAME_KEY}")
 
         for key in authors_keys:
             if key not in [self.AUTHORS_EMAIL_KEY, self.AUTHORS_NAME_KEY, self.AUTHORS_URI_KEY]:
@@ -90,28 +92,28 @@ class Pycaster:
         return authors
 
     def _load_category(self):
-        return self._load_generic_configuration_field(self.CATEGORY_KEY)
+        return self._load_generic_podcast_config_field(self.CATEGORY_KEY)
 
     def _load_description(self):
-        return self._load_generic_configuration_field(self.DESCRIPTION_KEY)
+        return self._load_generic_podcast_config_field(self.DESCRIPTION_KEY)
 
     def _load_language(self):
-        return self._load_generic_configuration_field(self.LANGUAGE_KEY)
+        return self._load_generic_podcast_config_field(self.LANGUAGE_KEY)
 
     def _load_logo_uri(self):
-        return self._load_generic_configuration_field(self.LOGO_URI_KEY)
+        return self._load_generic_podcast_config_field(self.LOGO_URI_KEY)
 
     def _load_name(self):
-        return self._load_generic_configuration_field(self.NAME_KEY)
+        return self._load_generic_podcast_config_field(self.NAME_KEY)
 
     def _load_website(self):
-        return self._load_generic_configuration_field(self.WEBSITE_KEY)
+        return self._load_generic_podcast_config_field(self.WEBSITE_KEY)
 
-    def _load_generic_configuration_field(self, field_key):
-        field = self.config.get(field_key)
+    def _load_generic_podcast_config_field(self, field_key):
+        field = self.config.get(self.PODCAST_KEY, {}).get(field_key)
 
         if not field:
-            raise self.build_missing_configuration_exception(field_key)
+            raise self.build_missing_config_exception(field_key)
 
         return field
 
@@ -140,7 +142,7 @@ class Pycaster:
             raise ValueError("The episode file is missing")
 
     @staticmethod
-    def build_missing_configuration_exception(json_path):
+    def build_missing_config_exception(json_path):
         return ValueError(f"The configuration file is missing information in the path: '{json_path}'")
 
     @staticmethod
