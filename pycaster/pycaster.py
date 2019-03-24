@@ -10,6 +10,7 @@ from feedgen.feed import FeedGenerator
 class Pycaster:
     # General
     CONFIG_PATH = '../config.json'
+    MP3_TYPE_KEY = 'audio/mpeg'
 
     # Configuration keys
     AUTHORS_KEY = 'authors'
@@ -23,11 +24,20 @@ class Pycaster:
     NAME_KEY = 'name'
     WEBSITE_KEY = 'website'
 
-    def __init__(self, episode_title, episode_file_location):
-        self._load_settings(episode_title=episode_title, episode_file_location=episode_file_location)
+    def __init__(self, episode_title, episode_description, episode_file_location):
+        self._load_settings(episode_title, episode_description, episode_file_location)
         self.feed = self._generate_feed()
 
     def publish_new_episode(self):
+        with open(os.path.abspath(Path(self.episode_file_location).resolve()), 'r') as file:
+            episode_file_uri = None
+
+        episode = self.feed.add_entry()
+        episode.id(episode_file_uri)
+        episode.title(self.episode_title)
+        episode.description(self.episode_description)
+        episode.enclosure(episode_file_uri, self.calculate_file_size(self.episode_file_location), self.MP3_TYPE_KEY)
+
         print(self.feed.rss_str())
 
     def _generate_feed(self):
@@ -45,7 +55,7 @@ class Pycaster:
 
         return feed
 
-    def _load_settings(self, episode_title, episode_file_location):
+    def _load_settings(self, episode_title, episode_description, episode_file_location):
         try:
             self.config = self._load_config()
             self.authors = self._load_authors()
@@ -56,6 +66,7 @@ class Pycaster:
             self.name = self._load_name()
             self.website = self._load_website()
             self.episode_title = self.verify_episode_title(episode_title)
+            self.episode_description = self.verify_episode_description(episode_description)
             self.episode_file_location = self.verify_episode_file_location(episode_file_location)
         except Exception as exception:
             print(f"An error occurred while loading the configuration: '{repr(exception)}'")
@@ -119,6 +130,11 @@ class Pycaster:
             raise ValueError("The episode title is missing")
 
     @staticmethod
+    def verify_episode_description(episode_description):
+        if not episode_description:
+            raise ValueError("The episode description is missing")
+
+    @staticmethod
     def verify_episode_file_location(episode_file_location):
         if not Path(episode_file_location).resolve().is_file():
             raise ValueError("The episode file is missing")
@@ -132,11 +148,16 @@ class Pycaster:
         return ValueError(f"The value in path of the configuration file is illegal: '{json_path}'")
 
     @staticmethod
+    def calculate_file_size(file_location):
+        return Path(file_location).resolve().stat().st_size
+
+    @staticmethod
     @click.command()
     @click.option('--title', prompt='Enter the title of this episode')
+    @click.option('--description', prompt='Enter the description of this episode')
     @click.option('--file', prompt='Enter the file location of this episode')
-    def read_arguments(title, file):
-        Pycaster(episode_title=title, episode_file_location=file).publish_new_episode()
+    def read_arguments(title, description, file):
+        Pycaster(episode_title=title, episode_description=description, episode_file_location=file).publish_new_episode()
 
 
 if __name__ == '__main__':
