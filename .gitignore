@@ -105,3 +105,6 @@ venv.bak/
 
 # Configuration file
 /config.json
+
+# Database file
+/pycaster.db
