@@ -21,6 +21,7 @@ class Pycaster:
     PODCAST_KEY = 'podcast'
 
     HOSTING_ACCESS_KEY_KEY = 'accessKey'
+    HOSTING_DATABASE_PATH_KEY = 'databasePath'
     HOSTING_ENDPOINT_URL_KEY = 'endpointUrl'
     HOSTING_EPISODE_PATH_KEY = 'episodePath'
     HOSTING_FEED_PATH_KEY = 'feedPath'
@@ -72,6 +73,13 @@ class Pycaster:
             )
 
             self._delete_local_feed_file()
+
+            uploader.upload_file_privately(
+                file_location=self.DATABASE_FILE,
+                upload_path=self.hosting_database_path,
+                bucket=self.hosting_bucket,
+                overwrite=True,
+            )
         except Exception as exception:
             print(f"\nAn error occurred while uploading the new episode: '{repr(exception)}'")
             exit()
@@ -147,6 +155,7 @@ class Pycaster:
             self.config = self._load_config()
 
             self.hosting_access_key = self._load_generic_hosting_config_field(self.HOSTING_ACCESS_KEY_KEY)
+            self.hosting_database_path = self._load_generic_hosting_config_field(self.HOSTING_DATABASE_PATH_KEY)
             self.hosting_endpoint_url = self._load_generic_hosting_config_field(self.HOSTING_ENDPOINT_URL_KEY)
             self.hosting_episode_path = self._load_generic_hosting_config_field(self.HOSTING_EPISODE_PATH_KEY)
             self.hosting_feed_path = self._load_generic_hosting_config_field(self.HOSTING_FEED_PATH_KEY)

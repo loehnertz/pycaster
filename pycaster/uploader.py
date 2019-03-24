@@ -15,6 +15,24 @@ class Uploader:
         self.client = self._init_client(region_name, endpoint_url, access_key, secret)
 
     def upload_file_publicly(self, file_location, upload_path, bucket, extra_args={}, overwrite=False):
+        return self._upload_file(
+            file_location=file_location,
+            upload_path=upload_path,
+            bucket=bucket,
+            extra_args={**self.PUBLIC_EXTRA_ARGS, **extra_args},
+            overwrite=overwrite,
+        )
+
+    def upload_file_privately(self, file_location, upload_path, bucket, extra_args={}, overwrite=False):
+        return self._upload_file(
+            file_location=file_location,
+            upload_path=upload_path,
+            bucket=bucket,
+            extra_args=extra_args,
+            overwrite=overwrite,
+        )
+
+    def _upload_file(self, file_location, upload_path, bucket, extra_args={}, overwrite=False):
         path = Path(file_location).resolve()
         file_upload_path = f'{upload_path}/{str(path.name)}'
 
@@ -25,7 +43,7 @@ class Uploader:
             str(path),
             str(bucket),
             file_upload_path,
-            ExtraArgs={**self.PUBLIC_EXTRA_ARGS, **extra_args},
+            ExtraArgs=extra_args,
         )
 
     def _file_already_exists(self, file_path, bucket):

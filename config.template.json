@@ -1,6 +1,7 @@
 {
   "hosting": {
     "accessKey": "",
+    "databasePath": "",
     "endpointUrl": "",
     "episodePath": "",
     "feedPath": "",
