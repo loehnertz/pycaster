@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 
 import click
-from feedgen.feed import FeedGenerator
 
 from database import Database, Episode
+from feedgen.feed import FeedGenerator
 from uploader import Uploader
 
 
@@ -28,10 +28,7 @@ class Pycaster:
     HOSTING_SECRET_KEY = 'secret'
     HOSTING_BUCKET_NAME_KEY = 'bucketName'
 
-    AUTHOR_KEY = 'authors'
-    AUTHOR_EMAIL_KEY = 'email'
-    AUTHOR_NAME_KEY = 'name'
-    AUTHOR_URI_KEY = 'uri'
+    AUTHOR_EMAIL_KEY = 'authorEmail'
     CATEGORY_KEY = 'category'
     DESCRIPTION_KEY = 'description'
     LANGUAGE_KEY = 'language'
@@ -120,7 +117,7 @@ class Pycaster:
         feed.load_extension('podcast')
         feed.podcast.itunes_category(self.category)
 
-        feed.author(self.author)
+        feed.author({'email': self.author_email, 'name': self.name})
         feed.description(self.description)
         feed.language(self.language)
         feed.link(href=self.WEBSITE_KEY, rel='alternate')
@@ -157,7 +154,7 @@ class Pycaster:
             self.hosting_secret = self._load_generic_hosting_config_field(self.HOSTING_SECRET_KEY)
             self.hosting_bucket = self._load_generic_hosting_config_field(self.HOSTING_BUCKET_NAME_KEY)
 
-            self.author = self._load_author()
+            self.author_email = self._load_generic_podcast_config_field(self.AUTHOR_EMAIL_KEY)
             self.category = self._load_generic_podcast_config_field(self.CATEGORY_KEY)
             self.description = self._load_generic_podcast_config_field(self.DESCRIPTION_KEY)
             self.language = self._load_generic_podcast_config_field(self.LANGUAGE_KEY)
@@ -173,23 +170,6 @@ class Pycaster:
         except Exception as exception:
             print(f"\nAn error occurred while loading the configuration: '{repr(exception)}'")
             exit()
-
-    def _load_author(self):
-        author = self.config.get(self.PODCAST_KEY, {}).get(self.AUTHOR_KEY)
-
-        if not author:
-            raise self.build_missing_config_exception(self.AUTHOR_KEY)
-
-        authors_keys = [author_key for author_key in author.keys()]
-
-        if not all(authors_keys):
-            raise self.build_missing_config_exception(f'{self.AUTHOR_KEY}.{self.AUTHOR_NAME_KEY}')
-
-        for key in authors_keys:
-            if key not in [self.AUTHOR_EMAIL_KEY, self.AUTHOR_NAME_KEY, self.AUTHOR_URI_KEY]:
-                raise self.build_illegal_configuration_exception(f'{self.AUTHOR_KEY}.{key}')
-
-        return author
 
     def _load_generic_hosting_config_field(self, field_key):
         field = self.config.get(self.HOSTING_KEY, {}).get(field_key)

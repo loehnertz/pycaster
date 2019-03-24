@@ -9,11 +9,7 @@
     "bucketName": ""
   },
   "podcast": {
-    "author": {
-      "email": "",
-      "name": "",
-      "uri": ""
-    },
+    "authorEmail": "",
     "category": "",
     "description": "",
     "language": "",
