@@ -24,21 +24,8 @@ class Pycaster:
     WEBSITE_KEY = 'website'
 
     def __init__(self, episode_title, episode_file_location):
-        try:
-            self.config = self._load_config()
-            self.authors = self._load_authors()
-            self.category = self._load_category()
-            self.description = self._load_description()
-            self.language = self._load_language()
-            self.logo_uri = self._load_logo_uri()
-            self.name = self._load_name()
-            self.website = self._load_website()
-            self.episode_title = self.verify_episode_title(episode_title)
-            self.episode_file_location = self.verify_episode_file_location(episode_file_location)
-            self.feed = self._generate_feed()
-        except Exception as exception:
-            print(f"An error occurred while loading the configuration: '{repr(exception)}'")
-            exit()
+        self._load_settings(episode_title=episode_title, episode_file_location=episode_file_location)
+        self.feed = self._generate_feed()
 
     def publish_new_episode(self):
         print(self.feed.rss_str())
@@ -57,6 +44,22 @@ class Pycaster:
         feed.title(self.name)
 
         return feed
+
+    def _load_settings(self, episode_title, episode_file_location):
+        try:
+            self.config = self._load_config()
+            self.authors = self._load_authors()
+            self.category = self._load_category()
+            self.description = self._load_description()
+            self.language = self._load_language()
+            self.logo_uri = self._load_logo_uri()
+            self.name = self._load_name()
+            self.website = self._load_website()
+            self.episode_title = self.verify_episode_title(episode_title)
+            self.episode_file_location = self.verify_episode_file_location(episode_file_location)
+        except Exception as exception:
+            print(f"An error occurred while loading the configuration: '{repr(exception)}'")
+            exit()
 
     def _load_authors(self):
         authors = self.config.get(self.AUTHORS_KEY)
