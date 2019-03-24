@@ -71,6 +71,7 @@ class Pycaster:
                 file_location=self.FEED_XML_FILE,
                 upload_path=self.hosting_feed_path,
                 bucket=self.hosting_bucket,
+                extra_args=Uploader.XML_FEED_EXTRA_ARGS,
                 overwrite=True,
             )
 

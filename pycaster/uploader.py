@@ -6,13 +6,15 @@ from botocore.exceptions import ClientError
 
 class Uploader:
     S3_KEY = 's3'
+    XML_RSS_CONTENT_TYPE = 'application/rss+xml'
     PUBLIC_EXTRA_ARGS = {'ACL': 'public-read'}
+    XML_FEED_EXTRA_ARGS = {'ContentType': XML_RSS_CONTENT_TYPE}
 
     def __init__(self, region_name, endpoint_url, access_key, secret):
         self.session = self.init_session()
         self.client = self._init_client(region_name, endpoint_url, access_key, secret)
 
-    def upload_file_publicly(self, file_location, upload_path, bucket, overwrite=False):
+    def upload_file_publicly(self, file_location, upload_path, bucket, extra_args={}, overwrite=False):
         path = Path(file_location).resolve()
         file_upload_path = f'{upload_path}/{str(path.name)}'
 
@@ -23,7 +25,7 @@ class Uploader:
             str(path),
             str(bucket),
             file_upload_path,
-            ExtraArgs=self.PUBLIC_EXTRA_ARGS,
+            ExtraArgs={**self.PUBLIC_EXTRA_ARGS, **extra_args},
         )
 
     def _file_already_exists(self, file_path, bucket):
