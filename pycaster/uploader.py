@@ -6,9 +6,8 @@ from botocore.exceptions import ClientError
 
 class Uploader:
     S3_KEY = 's3'
-    XML_RSS_CONTENT_TYPE = 'application/rss+xml'
+    CONTENT_TYPE_KEY = 'ContentType'
     PUBLIC_EXTRA_ARGS = {'ACL': 'public-read'}
-    XML_FEED_EXTRA_ARGS = {'ContentType': XML_RSS_CONTENT_TYPE}
 
     def __init__(self, region_name, endpoint_url, access_key, secret):
         self.session = self.init_session()

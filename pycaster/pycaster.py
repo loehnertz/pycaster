@@ -13,7 +13,8 @@ class Pycaster:
     # General
     CONFIG_PATH = '../config.json'
     DATABASE_FILE = '../pycaster.db'
-    MP3_TYPE_KEY = 'audio/mpeg'
+    MP3_MIME_TYPE = 'audio/mpeg'
+    XML_RSS_MIME_TYPE = 'application/rss+xml'
     FEED_XML_FILE = 'feed.xml'
 
     # Configuration keys
@@ -50,6 +51,8 @@ class Pycaster:
                 file_location=self.episode_file_location,
                 upload_path=self.hosting_episode_path,
                 bucket=self.hosting_bucket,
+                extra_args={Uploader.CONTENT_TYPE_KEY: self.MP3_MIME_TYPE},
+                overwrite=False,
             )
 
             self._append_previous_episodes_to_feed()
@@ -58,7 +61,7 @@ class Pycaster:
                 title=self.episode_title,
                 description=self.episode_description,
                 file_uri=self.episode_file_uri,
-                file_type=self.MP3_TYPE_KEY,
+                file_type=self.MP3_MIME_TYPE,
                 file_size=str(self.calculate_file_size(self.episode_file_location)),
             )
 
@@ -68,7 +71,7 @@ class Pycaster:
                 file_location=self.FEED_XML_FILE,
                 upload_path=self.hosting_feed_path,
                 bucket=self.hosting_bucket,
-                extra_args=Uploader.XML_FEED_EXTRA_ARGS,
+                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_RSS_MIME_TYPE},
                 overwrite=True,
             )
 
@@ -207,7 +210,13 @@ class Pycaster:
 
     def _build_episode_file_uri(self):
         endpoint_protocol, raw_endpoint_url = self.remove_http_from_url(self.hosting_endpoint_url)
-        return f'{endpoint_protocol}://{raw_endpoint_url}/{Path(self.episode_file_location).resolve().name}'
+        return (
+            f'{endpoint_protocol}://' +
+            f'{self.hosting_bucket}.' +
+            f'{raw_endpoint_url}/' +
+            f'{self.hosting_episode_path}/' +
+            f'{Path(self.episode_file_location).resolve().name}'
+        )
 
     @staticmethod
     def verify_episode_title(episode_title):
