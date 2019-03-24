@@ -6,12 +6,14 @@ from pathlib import Path
 import click
 from feedgen.feed import FeedGenerator
 
+from database import Database, Episode
 from uploader import Uploader
 
 
 class Pycaster:
     # General
     CONFIG_PATH = '../config.json'
+    DATABASE_FILE = '../pycaster.db'
     MP3_TYPE_KEY = 'audio/mpeg'
     FEED_XML_FILE = 'feed.xml'
 
@@ -41,37 +43,76 @@ class Pycaster:
     def __init__(self, episode_title, episode_description, episode_file_location):
         self._load_settings(episode_title, episode_description, episode_file_location)
         self.feed = self._generate_feed()
+        self.db = self._init_db()
 
     def publish_new_episode(self):
-        uploader = self._init_uploader()
+        try:
+            uploader = self._init_uploader()
 
-        uploader.upload_file_publicly(
-            file_location=self.episode_file_location,
-            upload_path=self.hosting_episode_path,
-            bucket=self.hosting_bucket,
-        )
+            uploader.upload_file_publicly(
+                file_location=self.episode_file_location,
+                upload_path=self.hosting_episode_path,
+                bucket=self.hosting_bucket,
+            )
 
-        episode = self.feed.add_entry()
-        episode.id(self.episode_file_uri)
-        episode.title(self.episode_title)
-        episode.description(self.episode_description)
-        episode.enclosure(
-            self.episode_file_uri,
-            str(self.calculate_file_size(self.episode_file_location)),
-            self.MP3_TYPE_KEY,
-        )
+            self._append_previous_episodes_to_feed()
 
-        self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
+            self._create_new_episode_entry(
+                title=self.episode_title,
+                description=self.episode_description,
+                file_uri=self.episode_file_uri,
+                file_type=self.MP3_TYPE_KEY,
+                file_size=str(self.calculate_file_size(self.episode_file_location)),
+            )
 
-        uploader.upload_file_publicly(
-            file_location=self.FEED_XML_FILE,
-            upload_path=self.hosting_feed_path,
-            bucket=self.hosting_bucket,
-        )
+            self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
 
-        self._delete_local_feed_file()
+            uploader.upload_file_publicly(
+                file_location=self.FEED_XML_FILE,
+                upload_path=self.hosting_feed_path,
+                bucket=self.hosting_bucket,
+                overwrite=True,
+            )
+
+            self._delete_local_feed_file()
+        except Exception as exception:
+            print(f"\nAn error occurred while uploading the new episode: '{repr(exception)}'")
+            exit()
 
         print('\nEpisode successfully uploaded!')
+
+    def _create_new_episode_entry(self, title, description, file_uri, file_type, file_size):
+        episode = self.feed.add_entry()
+        episode.id(file_uri)
+        episode.title(title)
+        episode.description(description)
+        episode.enclosure(file_uri, file_size, file_type)
+
+        self._insert_new_episode_into_database(
+            Episode(
+                title=title,
+                description=description,
+                file_uri=file_uri,
+                file_type=file_type,
+                file_size=file_size,
+            )
+        )
+
+        return episode
+
+    def _append_previous_episodes_to_feed(self):
+        for previous_episode in self._retrieve_previous_episodes():
+            episode = self.feed.add_entry()
+            episode.id(previous_episode.file_uri)
+            episode.title(previous_episode.title)
+            episode.description(previous_episode.description)
+            episode.enclosure(previous_episode.file_uri, previous_episode.file_size, previous_episode.file_type)
+
+    def _insert_new_episode_into_database(self, episode: Episode):
+        self.db.insert_new_episode(episode)
+
+    def _retrieve_previous_episodes(self):
+        return self.db.retrieve_all_episodes()
 
     def _generate_feed(self):
         feed = FeedGenerator()
@@ -95,6 +136,11 @@ class Pycaster:
             access_key=self.hosting_access_key,
             secret=self.hosting_secret,
         )
+
+    def _init_db(self):
+        db = Database(self.DATABASE_FILE)
+        db.create_episode_database()
+        return db
 
     def _delete_local_feed_file(self):
         os.remove(f'./{self.FEED_XML_FILE}')
@@ -125,7 +171,7 @@ class Pycaster:
 
             self.episode_file_uri = self._build_episode_file_uri()
         except Exception as exception:
-            print(f"An error occurred while loading the configuration: '{repr(exception)}'")
+            print(f"\nAn error occurred while loading the configuration: '{repr(exception)}'")
             exit()
 
     def _load_authors(self):
