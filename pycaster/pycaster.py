@@ -36,10 +36,11 @@ class Pycaster:
     LANGUAGE_KEY = 'language'
     LOGO_URI_KEY = 'logoUri'
     NAME_KEY = 'name'
+    SUBTITLE_KEY = 'subtitle'
     WEBSITE_KEY = 'website'
 
-    def __init__(self, episode_title, episode_description, episode_file_location):
-        self._load_settings(episode_title, episode_description, episode_file_location)
+    def __init__(self, episode_title, episode_description, episode_duration, episode_file_location):
+        self._load_settings(episode_title, episode_description, episode_duration, episode_file_location)
         self.feed = self._generate_feed()
         self.db = self._init_db()
 
@@ -60,6 +61,7 @@ class Pycaster:
             self._create_new_episode_entry(
                 title=self.episode_title,
                 description=self.episode_description,
+                duration=self.episode_duration,
                 file_uri=self.episode_file_uri,
                 file_type=self.MP3_MIME_TYPE,
                 file_size=str(self.calculate_file_size(self.episode_file_location)),
@@ -89,12 +91,18 @@ class Pycaster:
 
         print('\nEpisode successfully uploaded!')
 
-    def _create_new_episode_entry(self, title, description, file_uri, file_type, file_size):
+    def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size):
         episode = self.feed.add_entry()
-        episode.id(file_uri)
-        episode.title(title)
+
+        episode.load_extension('podcast')
+        episode.podcast.itunes_author(self.author)
+        episode.podcast.itunes_duration(duration)
+        episode.podcast.itunes_summary(description)
+
         episode.description(description)
         episode.enclosure(file_uri, file_size, file_type)
+        episode.id(file_uri)
+        episode.title(title)
 
         self._insert_new_episode_into_database(
             Episode(
@@ -128,12 +136,16 @@ class Pycaster:
         feed.load_extension('podcast')
         feed.podcast.itunes_author(self.author)
         feed.podcast.itunes_category(self.category)
+        feed.podcast.itunes_image(self.logo_uri)
+        feed.podcast.itunes_subtitle(self.subtitle)
+        feed.podcast.itunes_summary(self.description)
 
         feed.author(email=self.author, name=self.author)
         feed.description(self.description)
         feed.language(self.language)
-        feed.link(href=self.WEBSITE_KEY, rel='alternate')
+        feed.link(href=self.website, rel='alternate')
         feed.logo(self.logo_uri)
+        feed.subtitle(self.subtitle)
         feed.title(self.name)
 
         return feed
@@ -154,7 +166,7 @@ class Pycaster:
     def _delete_local_feed_file(self):
         os.remove(f'./{self.FEED_XML_FILE}')
 
-    def _load_settings(self, episode_title, episode_description, episode_file_location):
+    def _load_settings(self, episode_title, episode_description, episode_duration, episode_file_location):
         try:
             self.config = self._load_config()
 
@@ -173,10 +185,12 @@ class Pycaster:
             self.language = self._load_generic_podcast_config_field(self.LANGUAGE_KEY)
             self.logo_uri = self._load_generic_podcast_config_field(self.LOGO_URI_KEY)
             self.name = self._load_generic_podcast_config_field(self.NAME_KEY)
+            self.subtitle = self._load_generic_podcast_config_field(self.SUBTITLE_KEY)
             self.website = self._load_generic_podcast_config_field(self.WEBSITE_KEY)
 
             self.episode_title = self.verify_episode_title(episode_title)
             self.episode_description = self.verify_episode_description(episode_description)
+            self.episode_duration = self.verify_episode_duration(episode_duration)
             self.episode_file_location = self.verify_episode_file_location(episode_file_location)
 
             self.episode_file_uri = self._build_episode_file_uri()
@@ -232,6 +246,12 @@ class Pycaster:
         return episode_description
 
     @staticmethod
+    def verify_episode_duration(episode_duration):
+        if not episode_duration:
+            raise ValueError("The episode description is missing")
+        return episode_duration
+
+    @staticmethod
     def verify_episode_file_location(episode_file_location):
         if not Path(episode_file_location).resolve().is_file():
             raise ValueError("The episode file is missing")
@@ -263,9 +283,15 @@ class Pycaster:
     @click.command()
     @click.option('--title', prompt='Enter the title of this episode')
     @click.option('--description', prompt='Enter the description of this episode')
+    @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode')
     @click.option('--file', prompt='Enter the file location of this episode')
-    def read_arguments(title, description, file):
-        Pycaster(episode_title=title, episode_description=description, episode_file_location=file).publish_new_episode()
+    def read_arguments(title, description, duration, file):
+        Pycaster(
+            episode_title=title,
+            episode_description=description,
+            episode_duration=duration,
+            episode_file_location=file,
+        ).publish_new_episode()
 
 
 if __name__ == '__main__':
