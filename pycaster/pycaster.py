@@ -14,7 +14,7 @@ class Pycaster:
     CONFIG_PATH = '../config.json'
     DATABASE_FILE = '../pycaster.db'
     MP3_MIME_TYPE = 'audio/mpeg'
-    XML_RSS_MIME_TYPE = 'application/rss+xml'
+    XML_MIME_TYPE = 'text/xml'
     FEED_XML_FILE = 'feed.xml'
 
     # Configuration keys
@@ -71,7 +71,7 @@ class Pycaster:
                 file_location=self.FEED_XML_FILE,
                 upload_path=self.hosting_feed_path,
                 bucket=self.hosting_bucket,
-                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_RSS_MIME_TYPE},
+                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_MIME_TYPE},
                 overwrite=True,
             )
 
