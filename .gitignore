@@ -108,7 +108,3 @@ venv.bak/
 
 # Database file
 /pycaster.db
-
-# feedgen submodule
-!lib/feedgen
-pycaster/feedgen
