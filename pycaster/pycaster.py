@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 
 import click
+from feedgen.feed import FeedGenerator
 
 from database import Database, Episode
-from feedgen.feed import FeedGenerator
 from uploader import Uploader
 
 

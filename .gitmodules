@@ -1,3 +1,0 @@
-[submodule "lib/feedgen"]
-	path = lib/feedgen
-	url = https://github.com/loehnertz/python-feedgen.git
