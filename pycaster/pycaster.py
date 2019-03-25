@@ -30,7 +30,7 @@ class Pycaster:
     HOSTING_SECRET_KEY = 'secret'
     HOSTING_BUCKET_NAME_KEY = 'bucketName'
 
-    AUTHOR_EMAIL_KEY = 'authorEmail'
+    AUTHOR_KEY = 'author'
     CATEGORY_KEY = 'category'
     DESCRIPTION_KEY = 'description'
     LANGUAGE_KEY = 'language'
@@ -126,9 +126,10 @@ class Pycaster:
         feed = FeedGenerator()
 
         feed.load_extension('podcast')
+        feed.podcast.itunes_author(self.author)
         feed.podcast.itunes_category(self.category)
 
-        feed.author({'email': self.author_email, 'name': self.name})
+        feed.author(email=self.author, name=self.author)
         feed.description(self.description)
         feed.language(self.language)
         feed.link(href=self.WEBSITE_KEY, rel='alternate')
@@ -166,7 +167,7 @@ class Pycaster:
             self.hosting_secret = self._load_generic_hosting_config_field(self.HOSTING_SECRET_KEY)
             self.hosting_bucket = self._load_generic_hosting_config_field(self.HOSTING_BUCKET_NAME_KEY)
 
-            self.author_email = self._load_generic_podcast_config_field(self.AUTHOR_EMAIL_KEY)
+            self.author = self._load_generic_podcast_config_field(self.AUTHOR_KEY)
             self.category = self._load_generic_podcast_config_field(self.CATEGORY_KEY)
             self.description = self._load_generic_podcast_config_field(self.DESCRIPTION_KEY)
             self.language = self._load_generic_podcast_config_field(self.LANGUAGE_KEY)

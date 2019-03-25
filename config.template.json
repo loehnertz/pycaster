@@ -10,7 +10,7 @@
     "bucketName": ""
   },
   "podcast": {
-    "authorEmail": "",
+    "author": "",
     "category": "",
     "description": "",
     "language": "",
