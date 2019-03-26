@@ -94,7 +94,6 @@ class Pycaster:
     def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size):
         episode = self.feed.add_entry()
 
-        episode.load_extension('podcast')
         episode.podcast.itunes_author(self.author)
         episode.podcast.itunes_duration(duration)
         episode.podcast.itunes_summary(description)
