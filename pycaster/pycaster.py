@@ -56,6 +56,8 @@ class Pycaster:
                 overwrite=False,
             )
 
+            print('\nEpisode successfully uploaded!')
+
             self._append_previous_episodes_to_feed()
 
             self._create_new_episode_entry(
@@ -79,17 +81,21 @@ class Pycaster:
 
             self._delete_local_feed_file()
 
+            print('\nFeed successfully updated!')
+
             uploader.upload_file_privately(
                 file_location=self.DATABASE_FILE,
                 upload_path=self.hosting_database_path,
                 bucket=self.hosting_bucket,
                 overwrite=True,
             )
+
+            print('\nDatabase successfully backed-up!')
         except Exception as exception:
             print(f"\nAn error occurred while uploading the new episode: '{repr(exception)}'")
             exit()
 
-        print('\nEpisode successfully uploaded!')
+        print('\nFinished!')
 
     def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size):
         episode = self.feed.add_entry()
