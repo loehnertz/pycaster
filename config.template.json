@@ -1,10 +1,10 @@
 {
   "hosting": {
     "accessKey": "",
-    "databasePath": "",
+    "databasePath": "podcast/pycaster",
     "endpointUrl": "",
-    "episodePath": "",
-    "feedPath": "",
+    "episodePath": "podcast/episodes",
+    "feedPath": "podcast",
     "regionName": "",
     "secret": "",
     "bucketName": ""
