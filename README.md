@@ -9,6 +9,7 @@ A tool for uploading new episodes of your podcast to a hosting provider
 - Supports `AWS S3`, `Google Cloud Storage`, `Digital Ocean Spaces`, and every other provider that is `AWS S3` API-compatible
 - Automatically creates backups of the local episode database which is used for generating the feed
 - Offers built-in protection against overwriting episodes already uploaded in the past
+- Allows to use HTML markup in the description of an episode
 
 
 ## Motivation

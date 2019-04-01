@@ -62,7 +62,7 @@ class Pycaster:
 
             self._create_new_episode_entry(
                 title=self.episode_title,
-                description=self.episode_description,
+                description=self.convert_to_character_data(self.episode_description),
                 duration=self.episode_duration,
                 file_uri=self.episode_file_uri,
                 file_type=self.MP3_MIME_TYPE,
@@ -269,6 +269,10 @@ class Pycaster:
     @staticmethod
     def build_illegal_configuration_exception(json_path):
         return ValueError(f"The value in path of the configuration file is illegal: '{json_path}'")
+
+    @staticmethod
+    def convert_to_character_data(content):
+        return f"<![CDATA[{content}]]>"
 
     @staticmethod
     def calculate_file_size(file_location):
