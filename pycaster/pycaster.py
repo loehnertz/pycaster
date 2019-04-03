@@ -1,5 +1,7 @@
+import html
 import json
 import os
+import re
 from pathlib import Path
 
 import click
@@ -114,17 +116,42 @@ class Pycaster:
 
         print('\nFinished!')
 
-    def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size):
-        episode = self.feed.add_entry()
+    def republish_episodes(self):
+        try:
+            uploader = self._init_uploader()
 
-        episode.podcast.itunes_author(self.author)
-        episode.podcast.itunes_duration(duration)
-        episode.podcast.itunes_summary(description)
+            self._append_previous_episodes_to_feed()
 
-        episode.description(description)
-        episode.enclosure(file_uri, file_size, file_type)
-        episode.id(file_uri)
-        episode.title(title)
+            self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
+
+            uploader.upload_file_publicly(
+                file_location=self.FEED_XML_FILE,
+                upload_path=self.hosting_feed_path,
+                bucket=self.hosting_bucket,
+                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_MIME_TYPE},
+                overwrite=True,
+            )
+
+            self._delete_local_feed_file()
+
+            print('\nFeed successfully updated!')
+
+            uploader.upload_file_privately(
+                file_location=self.DATABASE_FILE,
+                upload_path=self.hosting_database_path,
+                bucket=self.hosting_bucket,
+                overwrite=True,
+            )
+
+            print('\nDatabase successfully backed-up!')
+        except Exception as exception:
+            print(f"\nAn error occurred while re-publishing the episodes: '{repr(exception)}'")
+            exit()
+
+        print('\nFinished!')
+
+    def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size, is_explicit):
+        episode = self._create_episode_entry(description, duration, file_size, file_type, file_uri, is_explicit, title)
 
         self._insert_new_episode_into_database(
             Episode(
@@ -137,6 +164,21 @@ class Pycaster:
                 is_explicit=is_explicit,
             ),
         )
+
+        return episode
+
+    def _create_episode_entry(self, description, duration, file_size, file_type, file_uri, is_explicit, title):
+        episode = self.feed.add_entry()
+
+        episode.podcast.itunes_author(self.author)
+        episode.podcast.itunes_explicit(is_explicit)
+        episode.podcast.itunes_duration(duration)
+        episode.podcast.itunes_summary(self.convert_episode_itunes_summary(description))
+
+        episode.description(description)
+        episode.enclosure(file_uri, file_size, file_type)
+        episode.id(file_uri)
+        episode.title(title)
 
         return episode
 
@@ -195,7 +237,15 @@ class Pycaster:
     def _delete_local_feed_file(self):
         os.remove(f'./{self.FEED_XML_FILE}')
 
-    def _load_settings(self, episode_title, episode_description, episode_duration, episode_file_location):
+    def _load_settings(
+        self,
+        republish,
+        episode_title,
+        episode_description,
+        episode_duration,
+        episode_file_location,
+        episode_is_explicit,
+    ):
         try:
             self.config = self._load_config()
 
@@ -218,12 +268,14 @@ class Pycaster:
             self.subtitle = self._load_generic_podcast_config_field(self.SUBTITLE_KEY)
             self.website = self._load_generic_podcast_config_field(self.WEBSITE_KEY)
 
-            self.episode_title = self.verify_episode_title(episode_title)
-            self.episode_description = self._extract_episode_description(episode_description)
-            self.episode_duration = self.verify_episode_duration(episode_duration)
-            self.episode_file_location = self.verify_episode_file_location(episode_file_location)
+            if not republish:
+                self.episode_title = self.verify_episode_title(episode_title)
+                self.episode_description = self._extract_episode_description(episode_description)
+                self.episode_duration = self.verify_episode_duration(episode_duration)
+                self.episode_file_location = self.verify_episode_file_location(episode_file_location)
+                self.episode_is_explicit = self.verify_episode_is_explicit(episode_is_explicit)
 
-            self.episode_file_uri = self._build_episode_file_uri()
+                self.episode_file_uri = self._build_episode_file_uri()
         except Exception as exception:
             print(f"\nAn error occurred while loading the configuration: '{repr(exception)}'")
             exit()
@@ -330,18 +382,26 @@ class Pycaster:
 
     @staticmethod
     @click.command()
+    @click.option('--republish', default=False)
     @click.option('--title', prompt='Enter the title of this episode')
     @click.option('--description', prompt='Enter the description of this episode (can be path to a text file)')
     @click.option('--explicit', prompt='Enter "yes" or "no" regarding the the episode being explicit')
     @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode')
     @click.option('--file', prompt='Enter the file location of this episode')
-    def read_arguments(title, description, duration, file):
-        Pycaster(
+    def read_arguments(republish, title, description, explicit, duration, file):
+        pycaster = Pycaster(
+            republish=republish,
             episode_title=title,
             episode_description=description,
             episode_duration=duration,
             episode_file_location=file,
-        ).publish_new_episode()
+            episode_is_explicit=explicit,
+        )
+
+        if republish:
+            pycaster.republish_episodes()
+        else:
+            pycaster.publish_new_episode()
 
 
 if __name__ == '__main__':
