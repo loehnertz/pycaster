@@ -194,7 +194,7 @@ class Pycaster:
             self.website = self._load_generic_podcast_config_field(self.WEBSITE_KEY)
 
             self.episode_title = self.verify_episode_title(episode_title)
-            self.episode_description = self.verify_episode_description(episode_description)
+            self.episode_description = self._extract_episode_description(episode_description)
             self.episode_duration = self.verify_episode_duration(episode_duration)
             self.episode_file_location = self.verify_episode_file_location(episode_file_location)
 
@@ -227,6 +227,15 @@ class Pycaster:
                 raise ImportError(f"A configuration file could not be found at the default path '{self.CONFIG_PATH}'")
 
             return config
+
+    def _extract_episode_description(self, description_input):
+        description_input = self.verify_episode_description(description_input)
+
+        if Path(description_input).resolve().is_file():
+            with open(os.path.abspath(Path(description_input).resolve()), 'r') as file:
+                return file.read()
+        else:
+            return description_input
 
     def _build_episode_file_uri(self):
         endpoint_protocol, raw_endpoint_url = self.remove_http_from_url(self.hosting_endpoint_url)
