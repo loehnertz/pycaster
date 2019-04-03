@@ -2,13 +2,15 @@ import sqlite3
 
 
 class Episode:
-    def __init__(self, title, description, file_uri, file_type, file_size, db_id=None):
+    def __init__(self, title, description, duration, file_uri, file_type, file_size, is_explicit, db_id=None):
         self.db_id = db_id
         self.title = title
         self.description = description
+        self.duration = duration
         self.file_uri = file_uri
         self.file_type = file_type
         self.file_size = file_size
+        self.is_explicit = is_explicit
 
 
 class Database:
@@ -25,7 +27,9 @@ class Database:
                 description TEXT,
                 file_uri TEXT unique,
                 file_type TEXT,
-                file_size TEXT
+                file_size TEXT,
+                duration TEXT,
+                is_explicit TEXT
             )
             '''
         )
@@ -36,8 +40,8 @@ class Database:
         cursor = self._get_cursor()
         cursor.execute(
             '''
-            INSERT INTO episodes(title, description, file_uri, file_type, file_size)
-            VALUES(:title, :description, :file_uri, :file_type, :file_size)
+            INSERT INTO episodes(title, description, file_uri, file_type, file_size, duration, is_explicit)
+            VALUES(:title, :description, :file_uri, :file_type, :file_size, :duration, :is_explicit)
             ''',
             {
                 'title': episode.title,
@@ -45,6 +49,8 @@ class Database:
                 'file_uri': episode.file_uri,
                 'file_type': episode.file_type,
                 'file_size': episode.file_size,
+                'duration': episode.duration,
+                'is_explicit': episode.is_explicit,
             }
         )
         self._commit_db()
@@ -85,6 +91,8 @@ class Database:
             file_uri=episode_row[3],
             file_type=episode_row[4],
             file_size=episode_row[5],
+            duration=episode_row[6],
+            is_explicit=episode_row[7],
         )
 
     @staticmethod

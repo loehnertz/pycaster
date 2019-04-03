@@ -33,14 +33,30 @@ class Pycaster:
     AUTHOR_KEY = 'author'
     CATEGORY_KEY = 'category'
     DESCRIPTION_KEY = 'description'
+    IS_EXPLICIT_KEY = 'explicit'
     LANGUAGE_KEY = 'language'
     LOGO_URI_KEY = 'logoUri'
     NAME_KEY = 'name'
     SUBTITLE_KEY = 'subtitle'
     WEBSITE_KEY = 'website'
 
-    def __init__(self, episode_title, episode_description, episode_duration, episode_file_location):
-        self._load_settings(episode_title, episode_description, episode_duration, episode_file_location)
+    def __init__(
+        self,
+        republish,
+        episode_title,
+        episode_description,
+        episode_duration,
+        episode_file_location,
+        episode_is_explicit,
+    ):
+        self._load_settings(
+            republish=republish,
+            episode_title=episode_title,
+            episode_description=episode_description,
+            episode_duration=episode_duration,
+            episode_file_location=episode_file_location,
+            episode_is_explicit=episode_is_explicit,
+        )
         self.feed = self._generate_feed()
         self.db = self._init_db()
 
@@ -67,6 +83,7 @@ class Pycaster:
                 file_uri=self.episode_file_uri,
                 file_type=self.MP3_MIME_TYPE,
                 file_size=str(self.calculate_file_size(self.episode_file_location)),
+                is_explicit=self.episode_is_explicit,
             )
 
             self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
@@ -113,21 +130,27 @@ class Pycaster:
             Episode(
                 title=title,
                 description=description,
+                duration=duration,
                 file_uri=file_uri,
                 file_type=file_type,
                 file_size=file_size,
-            )
+                is_explicit=is_explicit,
+            ),
         )
 
         return episode
 
     def _append_previous_episodes_to_feed(self):
         for previous_episode in self._retrieve_previous_episodes():
-            episode = self.feed.add_entry()
-            episode.id(previous_episode.file_uri)
-            episode.title(previous_episode.title)
-            episode.description(previous_episode.description)
-            episode.enclosure(previous_episode.file_uri, previous_episode.file_size, previous_episode.file_type)
+            self._create_episode_entry(
+                description=previous_episode.description,
+                duration=previous_episode.duration,
+                file_size=previous_episode.file_size,
+                file_type=previous_episode.file_type,
+                file_uri=previous_episode.file_uri,
+                is_explicit=previous_episode.is_explicit,
+                title=previous_episode.title,
+            )
 
     def _insert_new_episode_into_database(self, episode: Episode):
         self.db.insert_new_episode(episode)
@@ -141,6 +164,7 @@ class Pycaster:
         feed.load_extension('podcast')
         feed.podcast.itunes_author(self.author)
         feed.podcast.itunes_category(self.category)
+        feed.podcast.itunes_explicit(self.is_explicit)
         feed.podcast.itunes_image(self.logo_uri)
         feed.podcast.itunes_subtitle(self.subtitle)
         feed.podcast.itunes_summary(self.description)
@@ -187,6 +211,7 @@ class Pycaster:
             self.author = self._load_generic_podcast_config_field(self.AUTHOR_KEY)
             self.category = self._load_generic_podcast_config_field(self.CATEGORY_KEY)
             self.description = self._load_generic_podcast_config_field(self.DESCRIPTION_KEY)
+            self.is_explicit = self._load_generic_podcast_config_field(self.IS_EXPLICIT_KEY)
             self.language = self._load_generic_podcast_config_field(self.LANGUAGE_KEY)
             self.logo_uri = self._load_generic_podcast_config_field(self.LOGO_URI_KEY)
             self.name = self._load_generic_podcast_config_field(self.NAME_KEY)
@@ -272,6 +297,12 @@ class Pycaster:
         return episode_file_location
 
     @staticmethod
+    def verify_episode_is_explicit(episode_is_explicit):
+        if not episode_is_explicit:
+            raise ValueError("The information if the episode contains explicit content is missing")
+        return episode_is_explicit
+
+    @staticmethod
     def build_missing_config_exception(json_path):
         return ValueError(f"The configuration file is missing information in the path: '{json_path}'")
 
@@ -300,7 +331,8 @@ class Pycaster:
     @staticmethod
     @click.command()
     @click.option('--title', prompt='Enter the title of this episode')
-    @click.option('--description', prompt='Enter the description of this episode')
+    @click.option('--description', prompt='Enter the description of this episode (can be path to a text file)')
+    @click.option('--explicit', prompt='Enter "yes" or "no" regarding the the episode being explicit')
     @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode')
     @click.option('--file', prompt='Enter the file location of this episode')
     def read_arguments(title, description, duration, file):
