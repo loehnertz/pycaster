@@ -310,7 +310,7 @@ class Pycaster:
 
         if Path(description_input).resolve().is_file():
             with open(os.path.abspath(Path(description_input).resolve()), 'r') as file:
-                return file.read()
+                return ' '.join(str(file.read()).replace('\n', '').split())
         else:
             return description_input
 
@@ -323,6 +323,12 @@ class Pycaster:
             f'{self.hosting_episode_path}/' +
             f'{Path(self.episode_file_location).resolve().name}'
         )
+
+    @staticmethod
+    def convert_episode_itunes_summary(summary):
+        summary = str(html.unescape(summary)).replace('<br>', '\n')
+        html_tag_regex = re.compile(r'(<!--.*?-->|<[^>]*>)')
+        return html_tag_regex.sub('', summary)
 
     @staticmethod
     def verify_episode_title(episode_title):
@@ -364,7 +370,7 @@ class Pycaster:
 
     @staticmethod
     def convert_to_character_data(content):
-        return f"<![CDATA[{content}]]>"
+        return f"<![CDATA[{html.escape(content)}]]>"
 
     @staticmethod
     def calculate_file_size(file_location):
