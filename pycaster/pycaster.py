@@ -2,9 +2,11 @@ import html
 import json
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 
 import click
+import pytz
 from feedgen.feed import FeedGenerator
 
 from database import Database, Episode
@@ -18,6 +20,7 @@ class Pycaster:
     MP3_MIME_TYPE = 'audio/mpeg'
     XML_MIME_TYPE = 'text/xml'
     FEED_XML_FILE = 'feed.xml'
+    DEFAULT_TIMEZONE_KEY = 'Europe/Amsterdam'
 
     # Configuration keys
     HOSTING_KEY = 'hosting'
@@ -79,13 +82,14 @@ class Pycaster:
             self._append_previous_episodes_to_feed()
 
             self._create_new_episode_entry(
-                title=self.episode_title,
                 description=self.convert_to_character_data(self.episode_description),
                 duration=self.episode_duration,
                 file_uri=self.episode_file_uri,
                 file_type=self.MP3_MIME_TYPE,
                 file_size=str(self.calculate_file_size(self.episode_file_location)),
                 is_explicit=self.episode_is_explicit,
+                published=datetime.now(pytz.timezone(self.DEFAULT_TIMEZONE_KEY)),
+                title=self.episode_title,
             )
 
             self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
@@ -150,8 +154,19 @@ class Pycaster:
 
         print('\nFinished!')
 
-    def _create_new_episode_entry(self, title, description, duration, file_uri, file_type, file_size, is_explicit):
-        episode = self._create_episode_entry(description, duration, file_size, file_type, file_uri, is_explicit, title)
+    def _create_new_episode_entry(
+        self, title, description, duration, file_uri, file_type, file_size, is_explicit, published,
+    ):
+        episode = self._create_episode_entry(
+            description=description,
+            duration=duration,
+            file_size=file_size,
+            file_type=file_type,
+            file_uri=file_uri,
+            is_explicit=is_explicit,
+            published=published,
+            title=title,
+        )
 
         self._insert_new_episode_into_database(
             Episode(
@@ -162,12 +177,15 @@ class Pycaster:
                 file_type=file_type,
                 file_size=file_size,
                 is_explicit=is_explicit,
+                published=published,
             ),
         )
 
         return episode
 
-    def _create_episode_entry(self, description, duration, file_size, file_type, file_uri, is_explicit, title):
+    def _create_episode_entry(
+        self, description, duration, file_size, file_type, file_uri, is_explicit, published, title,
+    ):
         episode = self.feed.add_entry()
 
         episode.podcast.itunes_author(self.author)
@@ -178,6 +196,7 @@ class Pycaster:
         episode.description(description)
         episode.enclosure(file_uri, file_size, file_type)
         episode.id(file_uri)
+        episode.published(published)
         episode.title(title)
 
         return episode
@@ -191,6 +210,7 @@ class Pycaster:
                 file_type=previous_episode.file_type,
                 file_uri=previous_episode.file_uri,
                 is_explicit=previous_episode.is_explicit,
+                published=previous_episode.published,
                 title=previous_episode.title,
             )
 
