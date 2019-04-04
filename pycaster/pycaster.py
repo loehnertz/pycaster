@@ -21,6 +21,7 @@ class Pycaster:
     XML_MIME_TYPE = 'text/xml'
     FEED_XML_FILE = 'feed.xml'
     DEFAULT_TIMEZONE_KEY = 'Europe/Amsterdam'
+    HTML_TAG_REGEX = r'(<!--.*?-->|<[^>]*>)'
 
     # Configuration keys
     HOSTING_KEY = 'hosting'
@@ -191,7 +192,7 @@ class Pycaster:
         episode.podcast.itunes_author(self.author)
         episode.podcast.itunes_explicit(is_explicit)
         episode.podcast.itunes_duration(duration)
-        episode.podcast.itunes_summary(self.convert_episode_itunes_summary(description))
+        episode.podcast.itunes_summary(self._convert_episode_itunes_summary(description))
 
         episode.description(description)
         episode.enclosure(file_uri, file_size, file_type)
@@ -334,6 +335,10 @@ class Pycaster:
         else:
             return description_input
 
+    def _convert_episode_itunes_summary(self, summary):
+        summary = str(html.unescape(summary)).replace('<br>', '\r\n').replace('<p>', '\r\n').replace('</p>', '\r\n')
+        return re.compile(self.HTML_TAG_REGEX).sub('', summary)
+
     def _build_episode_file_uri(self):
         endpoint_protocol, raw_endpoint_url = self.remove_http_from_url(self.hosting_endpoint_url)
         return (
@@ -343,12 +348,6 @@ class Pycaster:
             f'{self.hosting_episode_path}/' +
             f'{Path(self.episode_file_location).resolve().name}'
         )
-
-    @staticmethod
-    def convert_episode_itunes_summary(summary):
-        summary = str(html.unescape(summary)).replace('<br>', '\n')
-        html_tag_regex = re.compile(r'(<!--.*?-->|<[^>]*>)')
-        return html_tag_regex.sub('', summary)
 
     @staticmethod
     def verify_episode_title(episode_title):
