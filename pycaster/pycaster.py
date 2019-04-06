@@ -389,7 +389,11 @@ class Pycaster:
 
     @staticmethod
     def convert_to_character_data(content):
-        return f"<![CDATA[{html.escape(content)}]]>"
+        return f"<![CDATA[{Pycaster.remove_unnecessary_spaces_from_html(html.escape(content))}]]>"
+
+    @staticmethod
+    def remove_unnecessary_spaces_from_html(html_string):
+        return str(html_string).replace('<p> ', '<p>').replace('</p> ', '</p>').replace('<br> ', '<br>')
 
     @staticmethod
     def calculate_file_size(file_location):
