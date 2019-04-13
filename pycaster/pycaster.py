@@ -7,6 +7,8 @@ from pathlib import Path
 
 import click
 import pytz
+import requests
+from eyed3.id3.tag import Tag
 from feedgen.feed import FeedGenerator
 
 from database import Database, Episode
@@ -69,6 +71,8 @@ class Pycaster:
     def publish_new_episode(self):
         try:
             uploader = self._init_uploader()
+
+            self._set_id3_tags()
 
             uploader.upload_file_publicly(
                 file_location=self.episode_file_location,
@@ -353,6 +357,25 @@ class Pycaster:
             f'{Path(self.episode_file_location).resolve().name}'
         )
 
+    def _set_id3_tags(self):
+        tag = Tag()
+        tag.parse(str(Path(self.episode_file_location).resolve().absolute()))
+
+        logo_data, logo_mimetype = self._retrieve_logo()
+
+        tag.album = self.name
+        tag.artist = self.author
+        tag.images.set(3, logo_data, logo_mimetype, 'Logo')
+        tag.title = self.episode_title
+        tag.year = datetime.today().year
+
+        tag.save()
+
+    def _retrieve_logo(self):
+        response = requests.get(self.logo_uri)
+        mime_type = response.headers['content-type']
+        return response.content, mime_type
+
     @staticmethod
     def verify_episode_title(episode_title):
         if not episode_title:
@@ -367,7 +390,7 @@ class Pycaster:
 
     @staticmethod
     def verify_episode_duration(episode_duration):
-        if not episode_duration:
+        if not episode_duration or ':' not in episode_duration:
             raise ValueError("The episode description is missing")
         return episode_duration
 
