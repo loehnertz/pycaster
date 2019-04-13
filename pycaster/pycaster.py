@@ -55,6 +55,7 @@ class Pycaster:
         episode_description,
         episode_duration,
         episode_file_location,
+        episode_file_uri,
         episode_is_explicit,
     ):
         self._load_settings(
@@ -63,6 +64,7 @@ class Pycaster:
             episode_description=episode_description,
             episode_duration=episode_duration,
             episode_file_location=episode_file_location,
+            episode_file_uri=episode_file_uri,
             episode_is_explicit=episode_is_explicit,
         )
         self.feed = self._generate_feed()
@@ -269,6 +271,7 @@ class Pycaster:
         episode_description,
         episode_duration,
         episode_file_location,
+        episode_file_uri,
         episode_is_explicit,
     ):
         try:
@@ -298,8 +301,10 @@ class Pycaster:
                 self.episode_description = self._extract_episode_description(episode_description)
                 self.episode_duration = self.verify_episode_duration(episode_duration)
                 self.episode_file_location = self.verify_episode_file_location(episode_file_location)
+                self.episode_file_uri = self.verify_episode_file_uri(episode_file_uri)
                 self.episode_is_explicit = self.verify_episode_is_explicit(episode_is_explicit)
 
+            if not self.episode_file_uri:
                 self.episode_file_uri = self._build_episode_file_uri()
         except Exception as exception:
             print(f"\nAn error occurred while loading the configuration: '{repr(exception)}'")
@@ -401,8 +406,14 @@ class Pycaster:
         return episode_file_location
 
     @staticmethod
+    def verify_episode_file_uri(episode_file_uri):
+        if not episode_file_uri:
+            return None
+        return episode_file_uri
+
+    @staticmethod
     def verify_episode_is_explicit(episode_is_explicit):
-        if not episode_is_explicit:
+        if not episode_is_explicit and (episode_is_explicit is 'yes' or episode_is_explicit is 'no'):
             raise ValueError("The information if the episode contains explicit content is missing")
         return episode_is_explicit
 
@@ -444,13 +455,15 @@ class Pycaster:
     @click.option('--explicit', prompt='Enter "yes" or "no" regarding the the episode being explicit')
     @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode')
     @click.option('--file', prompt='Enter the file location of this episode')
-    def read_arguments(republish, title, description, explicit, duration, file):
+    @click.option('--fileuri', prompt='[Optional] Enter the final file URI after the upload', default=None)
+    def read_arguments(republish, title, description, explicit, duration, file, fileuri):
         pycaster = Pycaster(
             republish=republish,
             episode_title=title,
             episode_description=description,
             episode_duration=duration,
             episode_file_location=file,
+            episode_file_uri=fileuri,
             episode_is_explicit=explicit,
         )
 
