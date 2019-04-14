@@ -347,9 +347,9 @@ class Pycaster:
     def _convert_episode_itunes_summary(self, summary):
         summary = str(html.unescape(summary)) \
             .replace('<br>', '\r\n') \
-            .replace('<p>', '\r\n') \
             .replace('</p>', '\r\n') \
-            .replace('<li>', '•')
+            .replace('<li>', '• ') \
+            .replace('</li>', '\r\n')
         return re.compile(self.HTML_TAG_REGEX).sub('', summary)
 
     def _build_episode_file_uri(self):
