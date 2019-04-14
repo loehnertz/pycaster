@@ -304,8 +304,8 @@ class Pycaster:
                 self.episode_file_uri = self.verify_episode_file_uri(episode_file_uri)
                 self.episode_is_explicit = self.verify_episode_is_explicit(episode_is_explicit)
 
-            if not self.episode_file_uri:
-                self.episode_file_uri = self._build_episode_file_uri()
+                if not self.episode_file_uri:
+                    self.episode_file_uri = self._build_episode_file_uri()
         except Exception as exception:
             print(f"\nAn error occurred while loading the configuration: '{repr(exception)}'")
             exit()
