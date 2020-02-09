@@ -448,12 +448,12 @@ class Pycaster:
     @staticmethod
     @click.command()
     @click.option('--republish', default=False)
-    @click.option('--title', prompt='Enter the title of this episode')
-    @click.option('--description', prompt='Enter the description of this episode (can be path to a text file)')
-    @click.option('--explicit', prompt='Enter "yes" or "no" regarding the the episode being explicit')
-    @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode')
-    @click.option('--file', prompt='Enter the file location of this episode')
-    @click.option('--fileuri', prompt='[Optional] Enter the final file URI after the upload', default=None)
+    @click.option('--title', prompt='Enter the title of this episode', default='')
+    @click.option('--description', prompt='Enter the description of this episode (can be path to a file)', default='')
+    @click.option('--explicit', prompt='Enter "yes" or "no" regarding the the episode being explicit', default='no')
+    @click.option('--duration', prompt='Enter the duration (mm:ss) of this episode', default='00:00')
+    @click.option('--file', prompt='Enter the file location of this episode', default='')
+    @click.option('--fileuri', prompt='[Optional] Enter the final file URI after the upload', default='')
     def read_arguments(republish, title, description, explicit, duration, file, fileuri):
         pycaster = Pycaster(
             republish=republish,
