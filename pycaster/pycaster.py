@@ -8,10 +8,9 @@ from pathlib import Path
 import click
 import pytz
 import requests
+from database import Database, Episode
 from eyed3.id3.tag import Tag
 from feedgen.feed import FeedGenerator
-
-from database import Database, Episode
 from uploader import Uploader
 
 
@@ -50,14 +49,14 @@ class Pycaster:
     WEBSITE_KEY = 'website'
 
     def __init__(
-        self,
-        republish,
-        episode_title,
-        episode_description,
-        episode_duration,
-        episode_file_location,
-        episode_file_uri,
-        episode_is_explicit,
+            self,
+            republish,
+            episode_title,
+            episode_description,
+            episode_duration,
+            episode_file_location,
+            episode_file_uri,
+            episode_is_explicit,
     ):
         self._load_settings(
             republish=republish,
@@ -100,28 +99,7 @@ class Pycaster:
                 title=self.episode_title,
             )
 
-            self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
-
-            uploader.upload_file_publicly(
-                file_location=self.FEED_XML_FILE,
-                upload_path=self.hosting_feed_path,
-                bucket=self.hosting_bucket,
-                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_MIME_TYPE},
-                overwrite=True,
-            )
-
-            self._delete_local_feed_file()
-
-            print('\nFeed successfully updated!')
-
-            uploader.upload_file_privately(
-                file_location=self.DATABASE_FILE,
-                upload_path=self.hosting_database_path,
-                bucket=self.hosting_bucket,
-                overwrite=True,
-            )
-
-            print('\nDatabase successfully backed-up!')
+            self._upload_feed_backup_database(uploader)
         except Exception as exception:
             print(f"\nAn error occurred while uploading the new episode: '{repr(exception)}'")
             exit()
@@ -134,36 +112,39 @@ class Pycaster:
 
             self._append_previous_episodes_to_feed()
 
-            self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
-
-            uploader.upload_file_publicly(
-                file_location=self.FEED_XML_FILE,
-                upload_path=self.hosting_feed_path,
-                bucket=self.hosting_bucket,
-                extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_MIME_TYPE},
-                overwrite=True,
-            )
-
-            self._delete_local_feed_file()
-
-            print('\nFeed successfully updated!')
-
-            uploader.upload_file_privately(
-                file_location=self.DATABASE_FILE,
-                upload_path=self.hosting_database_path,
-                bucket=self.hosting_bucket,
-                overwrite=True,
-            )
-
-            print('\nDatabase successfully backed-up!')
+            self._upload_feed_backup_database(uploader)
         except Exception as exception:
             print(f"\nAn error occurred while re-publishing the episodes: '{repr(exception)}'")
             exit()
 
         print('\nFinished!')
 
+    def _upload_feed_backup_database(self, uploader):
+        self.feed.rss_file(self.FEED_XML_FILE, pretty=True)
+
+        uploader.upload_file_publicly(
+            file_location=self.FEED_XML_FILE,
+            upload_path=self.hosting_feed_path,
+            bucket=self.hosting_bucket,
+            extra_args={Uploader.CONTENT_TYPE_KEY: self.XML_MIME_TYPE},
+            overwrite=True,
+        )
+
+        self._delete_local_feed_file()
+
+        print('\nFeed successfully updated!')
+
+        uploader.upload_file_privately(
+            file_location=self.DATABASE_FILE,
+            upload_path=self.hosting_database_path,
+            bucket=self.hosting_bucket,
+            overwrite=True,
+        )
+
+        print('\nDatabase successfully backed-up!')
+
     def _create_new_episode_entry(
-        self, title, description, duration, file_uri, file_type, file_size, is_explicit, published,
+            self, title, description, duration, file_uri, file_type, file_size, is_explicit, published,
     ):
         episode = self._create_episode_entry(
             description=description,
@@ -192,7 +173,7 @@ class Pycaster:
         return episode
 
     def _create_episode_entry(
-        self, description, duration, file_size, file_type, file_uri, is_explicit, published, title,
+            self, description, duration, file_size, file_type, file_uri, is_explicit, published, title,
     ):
         episode = self.feed.add_entry()
 
@@ -267,14 +248,14 @@ class Pycaster:
         os.remove(f'./{self.FEED_XML_FILE}')
 
     def _load_settings(
-        self,
-        republish,
-        episode_title,
-        episode_description,
-        episode_duration,
-        episode_file_location,
-        episode_file_uri,
-        episode_is_explicit,
+            self,
+            republish,
+            episode_title,
+            episode_description,
+            episode_duration,
+            episode_file_location,
+            episode_file_uri,
+            episode_is_explicit,
     ):
         try:
             self.config = self._load_config()
@@ -357,11 +338,11 @@ class Pycaster:
     def _build_episode_file_uri(self):
         endpoint_protocol, raw_endpoint_url = self.remove_http_from_url(self.hosting_endpoint_url)
         return (
-            f'{endpoint_protocol}://' +
-            f'{self.hosting_bucket}.' +
-            f'{raw_endpoint_url}/' +
-            f'{self.hosting_episode_path}/' +
-            f'{Path(self.episode_file_location).resolve().name}'
+                f'{endpoint_protocol}://' +
+                f'{self.hosting_bucket}.' +
+                f'{raw_endpoint_url}/' +
+                f'{self.hosting_episode_path}/' +
+                f'{Path(self.episode_file_location).resolve().name}'
         )
 
     def _set_id3_tags(self):
@@ -398,7 +379,7 @@ class Pycaster:
     @staticmethod
     def verify_episode_duration(episode_duration):
         if not episode_duration or ':' not in episode_duration:
-            raise ValueError("The episode description is missing")
+            raise ValueError("The episode duration is missing")
         return episode_duration
 
     @staticmethod
