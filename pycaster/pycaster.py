@@ -90,7 +90,7 @@ class Pycaster:
             self._append_previous_episodes_to_feed()
 
             self._create_new_episode_entry(
-                description=self.convert_to_character_data(self.episode_description),
+                description=self.episode_description,
                 duration=self.episode_duration,
                 file_uri=self.episode_file_uri,
                 file_type=self.MP3_MIME_TYPE,
@@ -429,11 +429,7 @@ class Pycaster:
 
     @staticmethod
     def convert_to_character_data(content):
-        return f"<![CDATA[{Pycaster.remove_unnecessary_spaces_from_html(html.escape(content))}]]>"
-
-    @staticmethod
-    def remove_unnecessary_spaces_from_html(html_string):
-        return str(html_string).replace('<p> ', '<p>').replace('</p> ', '</p>').replace('<br> ', '<br>')
+        return f"<![CDATA[{content}]]>"
 
     @staticmethod
     def calculate_file_size(file_location):
