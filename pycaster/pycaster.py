@@ -21,6 +21,7 @@ class Pycaster:
     DATABASE_FILE = '../pycaster.db'
     MP3_MIME_TYPE = 'audio/mpeg'
     XML_MIME_TYPE = 'text/xml'
+    JPG_FILE_EXTENSION = 'jpg'
     FEED_XML_FILE = 'feed.xml'
     DEFAULT_TIMEZONE_KEY = 'Europe/Amsterdam'
     HTML_TAG_REGEX = r'(<!--.*?-->|<[^>]*>)'
@@ -196,6 +197,7 @@ class Pycaster:
         episode = self.feed.add_entry()
 
         episode.podcast.itunes_author(self.author)
+        episode.podcast.itunes_image(f'{self.logo_uri}.{self.JPG_FILE_EXTENSION}')
         episode.podcast.itunes_explicit(is_explicit)
         episode.podcast.itunes_duration(duration)
         episode.podcast.itunes_summary(self._convert_episode_itunes_summary(description))
@@ -234,7 +236,7 @@ class Pycaster:
         feed.podcast.itunes_author(self.author)
         feed.podcast.itunes_category(self.category)
         feed.podcast.itunes_explicit(self.is_explicit)
-        feed.podcast.itunes_image(self.logo_uri)
+        feed.podcast.itunes_image(f'{self.logo_uri}.{self.JPG_FILE_EXTENSION}')
         feed.podcast.itunes_subtitle(self.subtitle)
         feed.podcast.itunes_summary(self.description)
 
