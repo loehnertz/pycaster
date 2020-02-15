@@ -188,6 +188,7 @@ class Pycaster:
         episode.id(file_uri)
         episode.published(published)
         episode.title(title)
+        episode.link(self.website)
 
         return episode
 
