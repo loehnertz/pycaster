@@ -41,6 +41,7 @@ class Pycaster:
     AUTHOR_KEY = 'author'
     CATEGORY_KEY = 'category'
     DESCRIPTION_KEY = 'description'
+    EMAIL_KEY = 'email'
     IS_EXPLICIT_KEY = 'explicit'
     LANGUAGE_KEY = 'language'
     LOGO_URI_KEY = 'logoUri'
@@ -219,10 +220,11 @@ class Pycaster:
         feed.podcast.itunes_category(self.category)
         feed.podcast.itunes_explicit(self.is_explicit)
         feed.podcast.itunes_image(f'{self.logo_uri}.{self.JPG_FILE_EXTENSION}')
+        feed.podcast.itunes_owner(name=self.author, email=self.email)
         feed.podcast.itunes_subtitle(self.subtitle)
         feed.podcast.itunes_summary(self.description)
 
-        feed.author(email=self.author, name=self.author)
+        feed.author(name=self.author, email=self.email)
         feed.description(self.description)
         feed.language(self.language)
         feed.link(href=self.website, rel='alternate')
@@ -273,6 +275,7 @@ class Pycaster:
             self.author = self._load_generic_podcast_config_field(self.AUTHOR_KEY)
             self.category = self._load_generic_podcast_config_field(self.CATEGORY_KEY)
             self.description = self._load_generic_podcast_config_field(self.DESCRIPTION_KEY)
+            self.email = self._load_generic_podcast_config_field(self.EMAIL_KEY)
             self.is_explicit = self._load_generic_podcast_config_field(self.IS_EXPLICIT_KEY)
             self.language = self._load_generic_podcast_config_field(self.LANGUAGE_KEY)
             self.logo_uri = self._load_generic_podcast_config_field(self.LOGO_URI_KEY)
