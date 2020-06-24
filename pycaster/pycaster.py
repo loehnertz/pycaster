@@ -333,12 +333,13 @@ class Pycaster:
 
     def _convert_episode_itunes_summary(self, summary):
         summary = str(html.unescape(summary)) \
-            .replace('<br>', ' \r\n') \
-            .replace('</h1>', ' \r\n') \
-            .replace('</h2>', ' \r\n') \
-            .replace('</p>', ' \r\n') \
+            .replace('<br>', '  |  \r\n\r\n') \
+            .replace('</h1>', '  |  \r\n\r\n') \
+            .replace('</h2>', '  |  \r\n\r\n') \
+            .replace('</h3>', '  |  \r\n\r\n') \
+            .replace('</p>', '  \r\n') \
             .replace('<li>', ' • ') \
-            .replace('</li>', ' \r\n')
+            .replace('</li>', '  \r\n')
         return re.compile(self.HTML_TAG_REGEX).sub('', summary)
 
     def _build_episode_file_uri(self):
