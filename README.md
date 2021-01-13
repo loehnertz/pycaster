@@ -15,7 +15,7 @@ A tool for the automated generation of podcast feeds with a built-in upload func
 
 ## Motivation
 
-I produce a podcast myself in German ([shameless plug][podcast-as-a-service]),
+I produce a podcast myself ([shameless plug][gist-of-it]),
 so naturally I needed a tool to upload new episodes to my hosting provider.
 As I am not a big fan of Wordpress, I did not want to go down that route that
 is understandibly quite popular with podcast producers.
@@ -74,7 +74,6 @@ venv/bin/python3 pycaster/pycaster.py \
     --file='./episode-1.mp3'
 ```
 
-
+[gist-of-it]: https://gist.fm/
 [itunes-categories]: https://castos.com/itunes-podcast-category-list/
-[podcast-as-a-service]: https://podcast-as-a-service.fm
 [rss-languages]: http://www.rssboard.org/rss-language-codes
